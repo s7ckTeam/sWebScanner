@@ -1,0 +1,7 @@
+requests
+colorama
+aiohttp
+xlrd
+pyparsing
+xlsxwriter
+tldextract
