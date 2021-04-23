@@ -28,6 +28,9 @@ class GetFofaApi():
         self.ip = ip
 
     def run(self):
+        if not self.email or not self.key:
+            logger.warning("请修改配置文件中fofaApi为您API的email和key")
+            exit(0)
         keywordsBs = base64.b64encode(self.ip.encode('utf-8'))
         keywordsBs = keywordsBs.decode('utf-8')
         try:
@@ -38,18 +41,17 @@ class GetFofaApi():
             if not domain_data:
                 logger.info('获取到的数据为空！')
                 exit(0)
-            size = len(domain_data)
-            data = input(f"获取到 {size} 条数据, 请输入您要扫扫描的网站数目：")
-            try:
-                data = int(data)
-            except:
-                logger.warning('输入不合法')
-                exit(0)
-            return domain_data[:data]
-
         except Exception as e:
-            logger.error(e)
+            logger.error(f"请求失败：{e}")
             return []
+        size = len(domain_data)
+        data = input(f"获取到 {size} 条数据, 请输入您要扫扫描的网站数目：")
+        try:
+            data = int(data)
+        except:
+            logger.warning('输入不合法')
+            exit(0)
+        return domain_data[:data]
 
 
     def get_data(self, req, keywordsBs):

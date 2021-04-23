@@ -15,7 +15,7 @@ from urllib.parse import urljoin
 from lib.log import logger
 from lib.get_proxy import random_proxy
 from lib.common import red_api, Get_Api, IterToAsync, add_http, xre_key, func_key, out_file
-from config.config import USER_AGENTS, TimeOut, StatusCode, OS, pyVersion
+from config.config import USER_AGENTS, TimeOut, StatusCode, OS
 
 
 async def scan_result(url, semaphore, method, params):
@@ -111,13 +111,10 @@ def asy_main(*args):
         exit()
 
     if OS == "Windows":
-        if pyVersion >= "3.7":
-            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())  # 加上这一行处理代理，不能放在协程函数内
-        else:
-            asyncio.set_event_loop(asyncio.ProactorEventLoop())
-
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())  # 加上这一行处理代理，不能放在协程函数内
     loop = asyncio.get_event_loop()
     semaphore = asyncio.Semaphore(500)
+
     key_list = []
     loop.run_until_complete(asyncio.wait([read_key(dict_file, semaphore, key_list, func)]))
     key_list = list(set(key_list))
@@ -140,5 +137,7 @@ def asy_main(*args):
         out_file("\n".join([json.dumps(x.result()) for x in done if x.result()['status_code'] in StatusCode]), out_file_path, file_type)
     except RuntimeError:
         pass
+    time.sleep(1)
+    loop.close()
     logger.info(f"输出文件为: {out_file_path}out_code.{file_type}")
-    exit()
+

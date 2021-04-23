@@ -16,13 +16,13 @@ from config.config import Version, ZIPBALL_PAGE, GIT_REPOSITORY, BASE_DIR
 
 def update():
     success = False
-
-    if Version == getLatestRevision():
+    NewVersion = getLatestRevision()
+    if Version == NewVersion:
         logger.info("Version：{0} 已经是最新版本".format(Version))
         exit(0)
-    elif Version < getLatestRevision():
+    elif Version < NewVersion:
         logger.info("当前版本 Version: {0}，最新版本为 Version: {1}".format(
-            Version, getLatestRevision()))
+            Version, NewVersion))
     else:
         logger.info("Version：{0} 已经是最新版本".format(Version))
         exit(0)

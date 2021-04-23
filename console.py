@@ -37,7 +37,7 @@ def args_check(cmdparse, usage):
     if confs['updateprogram']:
         update()
         exit(0)
-    if (not confs['query'] and not confs['file'] and not confs['url']) or (not confs['dict'] and not confs['func']):
+    if ((not confs['query'] or not confs['apitype']) and not confs['file'] and not confs['url']) or (not confs['dict'] and not confs['func']):
         print(usage)
         exit(0)
     if confs['porxy']:
@@ -55,13 +55,13 @@ def args_check(cmdparse, usage):
                 params = kw['params'] if 'params' in kw and isinstance(kw['params'], dict) else None
                 json = kw['json'] if 'json' in kw and isinstance(kw['json'], dict) else None
                 data = kw['data'] if 'data' in kw and isinstance(kw['data'], dict) else None
-                args[7] = {'params': params, 'json': json, 'data': data}
+                args[8] = {'params': params, 'json': json, 'data': data}
         except:
             print(usage)
             exit(0)
     if confs['output'] not in ['json', 'txt', "csv", "xlsx", "xls"]:
         logger.warning(f"暂不支持{confs['output']}文件格式，改为默认文件格式txt输出")
-        args[4] = "txt"
+        args[5] = "txt"
 
     return args
 
@@ -69,7 +69,9 @@ def args_check(cmdparse, usage):
 def main():
     version_check()
     parser = argparse.ArgumentParser(description="Screenshot.")
-    parser.add_argument('-fofa', '--fofa', type=str,
+    parser.add_argument('-at', '--apitype', type=str,
+                        dest='apitype', help='Input your api type.')
+    parser.add_argument('-q', '--query', type=str,
                         dest='query', help='Input your api query.')
     parser.add_argument('-f', '--file', type=str,
                         dest='file', help='Input your api.txt.')
@@ -95,16 +97,16 @@ def main():
                         action='store_true', help="Update the program.")
     args = parser.parse_args()
     usage = f'''
-Usage: python3 {parser.prog} --fofa title="admin"
+Usage: python3 {parser.prog} -at fofa -q title="admin"
 Usage: python3 {parser.prog} -f api.txt
 Usage: python3 {parser.prog} -u www.baidu.com
-Usage: python3 {parser.prog} (--fofa | -f | -u) -d dict.txt
-Usage: python3 {parser.prog} (--fofa | -f | -u) -func 
-Usage: python3 {parser.prog} (--fofa | -f | -u) (-d | -func) -o txt
-Usage: python3 {parser.prog} (--fofa | -f | -u) (-d | -func) --method post
-Usage: python3 {parser.prog} (--fofa | -f | -u) (-d | -func) --params params={{'your get params': 'value'}},json={{'your post params':'value'}},'data': {{}}
-Usage: python3 {parser.prog} (--fofa | -f | -u) (-d | -func) --porxy porxy.txt
-Usage: python3 {parser.prog} (--fofa | -f | -u) (-d | -func) --code 200,403
+Usage: python3 {parser.prog} ((-at -q) | -f | -u) -d dict.txt
+Usage: python3 {parser.prog} ((-at -q) | -f | -u) -func [a-z]{{2}}
+Usage: python3 {parser.prog} ((-at -q) | -f | -u) (-d | -func) -o txt
+Usage: python3 {parser.prog} ((-at -q) | -f | -u) (-d | -func) --method post
+Usage: python3 {parser.prog} ((-at -q) | -f | -u) (-d | -func) --params params={{'your get params': 'value'}},json={{'your post params':'value'}},'data'={{}}
+Usage: python3 {parser.prog} ((-at -q) | -f | -u) (-d | -func) --porxy porxy.txt
+Usage: python3 {parser.prog} ((-at -q) | -f | -u) (-d | -func) --code 200,403
     '''
     args = args_check(args, usage)
     asy_main(*args)
