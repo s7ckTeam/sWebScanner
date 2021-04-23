@@ -99,7 +99,12 @@ optional arguments:
   -v, --version         Show program's version number and exit.
   --update              Update the program.
 ```
+![截屏2021-04-21 下午5.48.06.png](https://i.loli.net/2021/04/23/Nwr8BAOj5JPhU3W.png)
+
+![photo_2021-04-22_10-48-50.jpg](https://i.loli.net/2021/04/23/PukrOziLvnYGNsl.jpg)
+
 #### 说明：
+
 * --fofa: 通过fofaapi获取url
 * -f: url文件
 * --u: 单个url
