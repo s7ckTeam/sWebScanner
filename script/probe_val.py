@@ -15,7 +15,7 @@ from urllib.parse import urljoin
 from lib.log import logger
 from lib.get_proxy import random_proxy
 from lib.common import red_api, Get_Api, IterToAsync, add_http, xre_key, func_key, out_file
-from config.config import USER_AGENTS, TimeOut, StatusCode, OS
+from config.config import USER_AGENTS, TimeOut, StatusCode, OS, pyVersion
 
 
 async def scan_result(url, semaphore, method, params):
@@ -77,29 +77,32 @@ async def get_url_list(url_list, api_list, key_list, semaphore):
                     key = "".join(key[1:])
                 subdomain, domain, suffix = tldextract.extract(host)
                 url_str = urljoin(host, key)
-                if not subdomain and '{SubDomain}' in url_str:
-                    url = ""
-                elif len(subdomain.split('.')) > 1:
-                    for x in tldextract.extract(subdomain):
-                        if x:
-                            url = url_str.format(Domain='.'.join([subdomain, domain, suffix]).strip('.'),
-                                                 SubDomain=subdomain,
-                                                 DomainCenter=domain,
-                                                 DomainCenterAndTld='.'.join([domain, suffix]).strip('.'))
-                else:
-                    url = url_str.format(Domain='.'.join([subdomain, domain, suffix]).strip('.'), SubDomain=subdomain,
-                                         DomainCenter=domain, DomainCenterAndTld='.'.join([domain, suffix]).strip('.'))
-                if url:
-                    url_list.append(url)
+                try:
+                    if not subdomain and '{SubDomain}' in url_str:
+                        url = ""
+                    elif len(subdomain.split('.')) > 1:
+                        for x in tldextract.extract(subdomain):
+                            if x:
+                                url = url_str.format(Domain='.'.join([subdomain, domain, suffix]).strip('.'),
+                                                     SubDomain=subdomain, DomainCenter=domain,
+                                                     DomainCenterAndTld='.'.join([domain, suffix]).strip('.'))
+                    else:
+                        url = url_str.format(Domain='.'.join([subdomain, domain, suffix]).strip('.'),
+                                             SubDomain=subdomain, DomainCenter=domain,
+                                             DomainCenterAndTld='.'.join([domain, suffix]).strip('.'))
+                    if url:
+                        url_list.append(url)
+                except:
+                    pass
 
 
 def asy_main(*args):
-    keyword, input_file, url, dict_file, file_type, func, method, params, *_ = args
+    api_type, keyword, input_file, url, dict_file, file_type, func, method, params, *_ = args
     logger.info("获取api")
     if input_file:
         api_list = red_api(os.path.abspath(input_file))
     elif keyword:
-        api_list = Get_Api(keyword).run()
+        api_list = Get_Api(api_type, keyword)
     else:
         api_list = [add_http(url)]
     logger.info("获取api完成")
@@ -108,10 +111,13 @@ def asy_main(*args):
         exit()
 
     if OS == "Windows":
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())  # 加上这一行处理代理，不能放在协程函数内
+        if pyVersion >= "3.7":
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())  # 加上这一行处理代理，不能放在协程函数内
+        else:
+            asyncio.set_event_loop(asyncio.ProactorEventLoop())
+
     loop = asyncio.get_event_loop()
     semaphore = asyncio.Semaphore(500)
-
     key_list = []
     loop.run_until_complete(asyncio.wait([read_key(dict_file, semaphore, key_list, func)]))
     key_list = list(set(key_list))
@@ -122,6 +128,9 @@ def asy_main(*args):
 
     url_list = []
     loop.run_until_complete(asyncio.wait([get_url_list(url_list, api_list, key_list, semaphore)]))
+    if not url_list:
+        logger.error(f"获取到的url列表为空")
+        exit()
     logger.info(f"获取url_list完成")
 
     task_list = [scan_result(x, semaphore, method, params) for x in url_list]
@@ -131,7 +140,5 @@ def asy_main(*args):
         out_file("\n".join([json.dumps(x.result()) for x in done if x.result()['status_code'] in StatusCode]), out_file_path, file_type)
     except RuntimeError:
         pass
-    time.sleep(1)
-    loop.close()
     logger.info(f"输出文件为: {out_file_path}out_code.{file_type}")
-
+    exit()
